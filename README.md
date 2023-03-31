@@ -1,3 +1,4 @@
-#web component 低代码工厂;
+#base 应用;
 
-依赖库：['@Vue3', '@element-plus']
+获取menu，并根据menu代表的子应用加载对应应用
+
