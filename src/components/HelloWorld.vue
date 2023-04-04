@@ -1,11 +1,19 @@
 <script lang="ts" setup>
 
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox,ElMessage } from 'element-plus'
 import {store} from '../store.js'
+import {getComponents,saveMenu} from '../request/index'
 
-import { ref } from 'vue'
+import { ref,onMounted } from 'vue'
 import type Node from 'element-plus/es/components/tree/src/model/node'
-
+import {
+  Check,
+  Delete,
+  Edit,
+  Message,
+  Search,
+  Star,
+} from '@element-plus/icons-vue'
 import 'element-plus/dist/index.css';
 import type { DragEvents } from 'element-plus/es/components/tree/src/model/useDragNode'
 import type {
@@ -61,7 +69,7 @@ const allowDrag = (draggingNode: Node) => {
 }
 
 
-let node;
+let selectNode = ref({});
 
 interface Tree {
   id: number
@@ -71,19 +79,36 @@ interface Tree {
 }
 let id = 1000
 const edit = (data)=>{
+  const {label:labelValue,url:urlValue,tagName:tagNameValue,icon:iconValue} = data;
+  label.value = labelValue;
+  url.value = urlValue;
+  component.value = tagNameValue;
+  icon.value = iconValue
+
+  selectNode.value = data
+  dialogVisible.value = true;
+
   console.log(data)
 }
 const append = (data: Tree) => {
+  console.log(data);
+  selectNode.value = data
   dialogVisible.value = true;
-  node = data;
 }
+const deepLevel2Url = (obj:any,tag:string,path:any[])=>{
+  const {tagName,children,url} = obj;
+  if(tagName == tag){
 
+  }
+
+}
 const remove = (node: Node, data: Tree) => {
   console.log(node,data)
   const parent = node.parent
   const children: Tree[] = parent.data.children || parent.data
   const index = children.findIndex((d) => d.id === data.id)
-  children.splice(index, 1)
+  children.splice(index, 1);
+  saveSystemMenu()
 }
 
 let dialogVisible = ref(false)
@@ -98,25 +123,58 @@ const handleClose = (done: () => void) => {
 }
 // 配置参数
 let label = ref('');
+let url = ref('');
 let icon = ref('');
+const component = ref('');
 const emit = defineEmits(['change']);
 const createNode = ()=>{
-  let data =  node;
-  const newChild = { id: id++, label: label,icon:icon.value, children: [] }
-  if (!data.children) {
-    data.children = []
+  let data =  selectNode;
+  const newChild = {
+    url:url, 
+    pre:data.value.pre + '/' + url.value, 
+    label: label,
+    tagName:component.value,
+    icon:icon.value, 
+    children: [] }
+  if (!data.value.children) {
+    data.value.children = []
   }
-  data.children.push(newChild)
-  dialogVisible.value = false
+  data.value.children.push(newChild);
+  console.log(data)
+  dialogVisible.value = false;
+  saveSystemMenu()
 }
+const componentList = ref([]);
+const getComponentList = ()=>{
+  getComponents().then((res:any)=>{
+    const {code,data} = res;
+    if(code == 200){
+      componentList.value = data || []
+    }
+    console.log(res)
+  })
+}
+onMounted(() => {
+  getComponentList();
+})
 const colorsLevel = ['','#F56C6C','#67C23A','#409EFF','#E6A23C',]
 const icons = ['icon-suyuan','icon-hailiangxiansuo','icon-gaojing','icon-judge','icon-wangzhankexindu']
 let selectIcon = (e)=>{
   icon.value = e
 }
+const saveSystemMenu = ()=>{
+  saveMenu({menus:store.dataSource}).then(res=>{
+    console.log('保存菜单',res)
+    ElMessage({
+    message: '修改菜单成功.',
+    type: 'success',
+  })
+  })
+}
 </script>
 
 <template>
+  <el-button type="success" size="small" :icon="Check" circle @click="saveSystemMenu"/>
  <el-tree
     :allow-drop="allowDrop"
     :allow-drag="allowDrag"
@@ -144,17 +202,38 @@ let selectIcon = (e)=>{
           </span>
         </span>
       </template>
-  </el-tree>
-  <el-dialog
+ </el-tree>
+   <el-dialog
     v-model="dialogVisible"
     title="添加菜单页面"
     width="30%"
     :close-on-click-modal= 'false'
   >
     <div>
-      <div class="config"><span class="config-label">label:</span><el-input style="flex: 1;" v-model="label" placeholder="Please input" /></div>
+      <div class="config">
+        <div class="config-label">label:</div>
+        <el-input style="flex: 1;" v-model="label" placeholder="请输入 label"> 
+        </el-input>
+      </div>
+      <div class="config">
+        <div class="config-label">url:</div>
+        <el-input style="flex: 1;" v-model="url" placeholder="请输入 url">
+          <template #prepend>{{ selectNode.pre }}/</template>
+        </el-input>
+      </div>
+      <div class="config">
+        <div class="config-label">component:</div>
+        <el-select v-model="component" class="m-2" placeholder="Select">
+          <el-option
+            v-for="item in componentList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </div>
       <div class="config icon-config">
-        <span class="config-label">icon:</span>
+        <div class="config-label">icon:</div>
         <div>
           <span v-for="i of icons" 
             class="iconfont" 
@@ -184,11 +263,12 @@ let selectIcon = (e)=>{
 }
 .config{
   margin-bottom: 10px;
-  display: flex;
-    align-items: center;
 }
 .config-label{
-  width: 65px;
+  font-size: 15px;
+    color: #F56C6C;
+    font-weight: 600;
+    margin-bottom: 3px;
 }
 .icon-config .iconfont{
   border: 1px solid #dcdfe6;
@@ -198,9 +278,7 @@ let selectIcon = (e)=>{
 .icon-config .iconfont:hover{
   color: red !important;
 }
-.icon-config{
-  display: flex;
-}
+
 .custom-tree-node .operation{
     display:none;
 }
