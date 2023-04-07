@@ -77,21 +77,31 @@ interface Tree {
   icon?: string
   children?: Tree[]
 }
-let id = 1000
+let id = 1000;
+let isEdit = ref(false)
 const edit = (data)=>{
-  const {label:labelValue,url:urlValue,tagName:tagNameValue,icon:iconValue} = data;
+  console.log(data)
+  const {label:labelValue,url:urlValue,tagName:tagNameValue,pre:preValue,icon:iconValue} = data;
   label.value = labelValue;
   url.value = urlValue;
   component.value = tagNameValue;
   icon.value = iconValue
-
+  pre.value = preValue
+  isEdit.value = true
+  // 编辑的节点
   selectNode.value = data
   dialogVisible.value = true;
 
   console.log(data)
 }
-const append = (data: Tree) => {
+const append = (data: any) => {
+  const {url:urlValue,pre:preValue} = data;
+
   console.log(data);
+  label.value = ''
+  pre.value = preValue + '/' + urlValue
+  url.value = ''
+  isEdit.value = false
   selectNode.value = data
   dialogVisible.value = true;
 }
@@ -123,6 +133,7 @@ const handleClose = (done: () => void) => {
 }
 // 配置参数
 let label = ref('');
+let pre = ref('');
 let url = ref('');
 let icon = ref('');
 const component = ref('');
@@ -130,17 +141,23 @@ const emit = defineEmits(['change']);
 const createNode = ()=>{
   let data =  selectNode;
   const newChild = {
-    url:url, 
-    pre:data.value.pre + '/' + url.value, 
-    label: label,
+    url:url.value, 
+    pre:data.value.pre + '/' + data.value.url, 
+    label: label.value,
     tagName:component.value,
-    icon:icon.value, 
-    children: [] }
-  if (!data.value.children) {
-    data.value.children = []
+    icon:icon.value };
+  // 编辑当前节点
+  if(isEdit.value){
+    newChild.pre = data.value.pre;
+    Object.assign(selectNode.value, newChild)
+  }  else{
+    newChild.children = []
+    if (!data.value.children) {
+      data.value.children = []
+    }
+    data.value.children.push(newChild);
   }
-  data.value.children.push(newChild);
-  console.log(data)
+  
   dialogVisible.value = false;
   saveSystemMenu()
 }
@@ -218,7 +235,7 @@ const saveSystemMenu = ()=>{
       <div class="config">
         <div class="config-label">url:</div>
         <el-input style="flex: 1;" v-model="url" placeholder="请输入 url">
-          <template #prepend>{{ selectNode.pre }}/</template>
+          <template #prepend>{{ pre }}/</template>
         </el-input>
       </div>
       <div class="config">

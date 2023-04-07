@@ -29,9 +29,9 @@ let secondMenus:any = ref([]);
 // 菜单事件
 const handleSelect = (index:string,keyPath:string,routeResult:any)=>{
   console.log('选中菜单',index,keyPath,routeResult)
-  let nextMenu = store.dataSource.filter((item:any)=>item.pre == index);
-  const {tagName,pre,children} = nextMenu[0];
-  menuLevel1.value = pre;
+  let nextMenu = store.dataSource.filter((item:any)=>item.pre + '/' + item.url == index);
+  const {tagName,pre,children,url} = nextMenu[0];
+  menuLevel1.value = pre + '/' + url;
   secondMenus.value = children;
   // getPage(tagName);
   // 选中第一个
@@ -49,8 +49,8 @@ const handleLevel2Select = (index:string,keyPath:string,routeResult:any)=>{
 }
 const getTargetTagName = (menus:any[] = [],index:string):string=>{
   for(let menu of menus){
-    const {pre,tagName,children} = menu;
-    if(index == pre){
+    const {pre,tagName,children,url} = menu;
+    if(index == pre + '/' + url){
       return tagName;
     }else{
       let tag =  getTargetTagName(children,index);
@@ -152,10 +152,10 @@ const getMenu = ()=>{
 const menuLevel1 = ref('/test');
 const menuLevel2 = ref('');
 const deepTagMenu = (item:any,pre:string)=>{
-  const {tagName,url,children = []} = item;
-  item['pre'] =pre + '/' + url;
-  children.forEach((child:any)=>{
-    deepTagMenu(child,item['pre'])
+  const {url,children} = item;
+  item['pre'] =pre;
+  (children || []).forEach((child:any)=>{
+    deepTagMenu(child,pre + '/' + url)
   })
 }
 onMounted(() => {
@@ -163,12 +163,12 @@ onMounted(() => {
 })
 const expendMenu2 = (child:any)=>{
   [child].forEach((menu1:any)=>{
-    const {pre,children} = menu1;
-    if(pre == menuLevel1.value){
+    const {pre,children,url} = menu1;
+    if(pre + '/' + url == menuLevel1.value){
       // secondMenus = children;
       // 选中二级
       const {pre:index,tagName} = deepSelectMenu(menu1)
-
+      console.log('选中：',index)
       menuLevel2.value =  index;
       getPage(tagName);
       router.push(index)
@@ -176,9 +176,9 @@ const expendMenu2 = (child:any)=>{
   })
 }
 const deepSelectMenu = (item:any):any=>{
-  const {pre,tagName,children} = item;
+  const {pre,url,tagName,children} = item;
   if(!children || children.length == 0){
-    return {pre,tagName};
+    return {pre:pre + '/' + url,tagName};
   }else{
     return deepSelectMenu(children[0])
   }
@@ -202,7 +202,7 @@ const deepSelectMenu = (item:any):any=>{
               active-text-color="#ffd04b"
               @select="handleSelect"
             >
-            <el-menu-item v-for="menu of store.dataSource" :key="menu.tagName" :index="menu.pre">
+            <el-menu-item v-for="menu of store.dataSource" :key="menu.tagName" :index="menu.pre + '/' + menu.url">
               <el-icon>
                 <span class="iconfont" :class='menu.icon'></span>
               </el-icon>
@@ -235,7 +235,7 @@ const deepSelectMenu = (item:any):any=>{
               >
               <template v-for="(menu) in secondMenus" :key="menu.tagName" >
                 <!-- 二级菜单集合 -->
-                <el-sub-menu v-show="menu.children && menu.children.length"  :index="menu.pre">
+                <el-sub-menu v-show="menu.children && menu.children.length"  :index="menu.pre + '/' + menu.url">
                     <template #title >
                       <el-icon>
                         <span class="iconfont" :class='menu.icon'></span>
@@ -247,7 +247,7 @@ const deepSelectMenu = (item:any):any=>{
                       <template v-if="child.children && child.children.length >0">
                         <el-menu-item-group :key="child.tagName" :title="child.label">
                           <template v-if="child.children && child.children.length>0">
-                            <el-menu-item v-for="child2 of child.children" :key="child2.tagName"  :index="child2.pre">
+                            <el-menu-item v-for="child2 of child.children" :key="child2.tagName"  :index="child2.pre + '/' + child2.url">
                               <template #title >
                                 <el-icon>
                                   <span class="iconfont" :class='child2.icon'></span>
@@ -260,7 +260,7 @@ const deepSelectMenu = (item:any):any=>{
                       </template>
                       <!-- 无三级菜单 -->
                       <template v-if="!child.children || child.children.length == 0">
-                        <el-menu-item :index="child.pre">
+                        <el-menu-item :index="child.pre + '/' + child.url">
                           <template #title >
                               <el-icon>
                                 <span class="iconfont" :class='child.icon'></span>
@@ -272,7 +272,7 @@ const deepSelectMenu = (item:any):any=>{
                     </template>
                 </el-sub-menu>
                 <!-- 二级独立菜单 -->
-                <el-menu-item v-show="!menu.children || menu.children.length == 0" :index="menu.pre">
+                <el-menu-item v-show="!menu.children || menu.children.length == 0" :index="menu.pre + '/' + menu.url">
                       <el-icon>
                         <span class="iconfont" :class='menu.icon'></span>
                       </el-icon>
@@ -295,7 +295,7 @@ const deepSelectMenu = (item:any):any=>{
 <style>
 .el-menu-vertical-demo:not(.el-menu--collapse) {
   width: 200px;
-  min-height: 400px;
+  min-height: 200px;
 }
 .el-first-menu{
   flex: 1;
