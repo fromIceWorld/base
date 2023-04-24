@@ -61,6 +61,7 @@ const getTargetTagName = (menus:any[] = [],index:string):string=>{
   }
   return ''
 }
+let cacheScript = new Set();
 const getPage = (tagName)=>{
   getPages(tagName).then((res:any)=>{
     let  {code ,data} = res;
@@ -90,7 +91,11 @@ const getPage = (tagName)=>{
       
       let doms:any[] = [];
       let dep = [];
-      for (let [src, decorator] of Object.entries(script)) {
+        for (let [src, decorator] of Object.entries(script)) {
+          if(cacheScript.has(JSON.stringify({src, decorator}))){
+            continue
+          }
+          cacheScript.add(JSON.stringify({src, decorator}));
         // if(doms.length == 6){
         //   console.log(doms)
         //   continue
@@ -120,6 +125,7 @@ const getPage = (tagName)=>{
       if(!tagName){
         return
       }
+
       let comScript = document.createElement('script');
       comScript.src = 'pull/'  + component.src;
       Promise.all(dep).then((res) => {
@@ -295,7 +301,7 @@ const deepSelectMenu = (item:any):any=>{
 <style>
 .el-menu-vertical-demo:not(.el-menu--collapse) {
   width: 200px;
-  min-height: 200px;
+  min-height: calc(100vh - 60px);;
 }
 .el-first-menu{
   flex: 1;
@@ -303,9 +309,7 @@ const deepSelectMenu = (item:any):any=>{
 .logo{
   width: 200px
 }
-.my-menu {
-  height: calc(100vh - 60px);
-}
+
 body{
   padding: 0;
   margin: 0;
