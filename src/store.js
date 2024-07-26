@@ -9,6 +9,7 @@ export const store = reactive({
             appName: 'test',
             label: '告警管理',
             icon: 'icon-suyuan',
+            url: 'alarm',
             children: [
                 {
                     id: 9,
@@ -21,6 +22,7 @@ export const store = reactive({
                             label: '溯源管理',
                             icon: 'icon-suyuan',
                             tagName: 'suyuan',
+                            url: 'ai',
                             children: [
                                 {
                                     id: 999,
@@ -37,6 +39,7 @@ export const store = reactive({
                     label: '研判策略',
                     tagName: 'celve',
                     icon: 'icon-hailiangxiansuo',
+                    url: 'ai-security',
                 },
             ],
         },

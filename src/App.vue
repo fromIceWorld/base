@@ -91,37 +91,37 @@ const getPage = (tagName)=>{
       
       let doms:any[] = [];
       let dep = [];
-        for (let [src, decorator] of Object.entries(script)) {
-          if(cacheScript.has(JSON.stringify({src, decorator}))){
-            continue
-          }
-          cacheScript.add(JSON.stringify({src, decorator}));
-        // if(doms.length == 6){
-        //   console.log(doms)
-        //   continue
-        // }
-          let dom:any;
-          if (src.endsWith('.js')) {
-              dom = document.createElement('script');
-              dom.src = 'pull/' + src;
-              Object.keys(decorator).forEach((key) => {
-                  dom[key] = decorator[key];
-              });
-          } else if (src.endsWith('.css')) {
-              dom = document.createElement('link');
-              dom.href = 'pull/' +  src;
-              dom.rel = 'stylesheet';
-          }
-          dep.push(
-              new Promise((resolve, reject) => {
-                  dom.addEventListener('load', () => {
-                      resolve(src);
-                  });
-              })
-          );
-          doms.push(dom);
-          document.head.append(dom);
-      }
+      //   for (let [src, decorator] of Object.entries(script)) {
+      //     if(cacheScript.has(JSON.stringify({src, decorator}))){
+      //       continue
+      //     }
+      //     cacheScript.add(JSON.stringify({src, decorator}));
+      //   // if(doms.length == 6){
+      //   //   console.log(doms)
+      //   //   continue
+      //   // }
+      //     let dom:any;
+      //     if (src.endsWith('.js')) {
+      //         dom = document.createElement('script');
+      //         dom.src = 'pull/' + src;
+      //         Object.keys(decorator).forEach((key) => {
+      //             dom[key] = decorator[key];
+      //         });
+      //     } else if (src.endsWith('.css')) {
+      //         dom = document.createElement('link');
+      //         dom.href = 'pull/' +  src;
+      //         dom.rel = 'stylesheet';
+      //     }
+      //     dep.push(
+      //         new Promise((resolve, reject) => {
+      //             dom.addEventListener('load', () => {
+      //                 resolve(src);
+      //             });
+      //         })
+      //     );
+      //     doms.push(dom);
+      //     document.head.append(dom);
+      // }
       if(!tagName){
         return
       }
@@ -196,7 +196,6 @@ const deepSelectMenu = (item:any):any=>{
       <!-- 应用表 -->
         <div class="header">
           <div class="logo">
-            {{menuLevel1}}  {{ menuLevel2 }}
           </div>
           <div style="flex:1">
             <el-menu
